@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Chess Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(8, 60px);
+      grid-template-rows: repeat(8, 60px);
+      gap: 0;
+      border: 2px solid #333;
+    }
+    .square {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      cursor: pointer;
+    }
+    .light { background-color: #f0d9b5; }
+    .dark { background-color: #b58863; color: white; }
+    .selected { outline: 3px solid red; }
+  </style>
+</head>
+<body>
+  <h1>Simple Chess</h1>
+  <div id="board"></div>
+  <p id="status"></p>
+
+  <script>
+    const boardElement = document.getElementById('board');
+    const statusElement = document.getElementById('status');
+
+    let board = [
+      ['♜','♞','♝','♛','♚','♝','♞','♜'],
+      ['♟','♟','♟','♟','♟','♟','♟','♟'],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['♙','♙','♙','♙','♙','♙','♙','♙'],
+      ['♖','♘','♗','♕','♔','♗','♘','♖']
+    ];
+
+    let selected = null;
+    let currentPlayer = 'white'; // white starts
+
+    function isWhite(piece) {
+      return ['♙','♖','♘','♗','♕','♔'].includes(piece);
+    }
+
+    function isBlack(piece) {
+      return ['♟','♜','♞','♝','♛','♚'].includes(piece);
+    }
+
+    function renderBoard() {
+      boardElement.innerHTML = '';
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          const square = document.createElement('div');
+          square.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+          square.textContent = board[row][col];
+          square.dataset.row = row;
+          square.dataset.col = col;
+          square.addEventListener('click', onSquareClick);
+          boardElement.appendChild(square);
+        }
+      }
+      statusElement.textContent = `Current Turn: ${currentPlayer}`;
+    }
+
+    function onSquareClick(e) {
+      const row = +e.target.dataset.row;
+      const col = +e.target.dataset.col;
+      const piece = board[row][col];
+
+      if (selected) {
+        const [fromRow, fromCol] = selected;
+        const movingPiece = board[fromRow][fromCol];
+
+        if (isValidMove(movingPiece, fromRow, fromCol, row, col)) {
+          board[row][col] = movingPiece;
+          board[fromRow][fromCol] = '';
+          selected = null;
+          currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
+        } else {
+          selected = null;
+        }
+        renderBoard();
+      } else {
+        if ((currentPlayer === 'white' && isWhite(piece)) ||
+            (currentPlayer === 'black' && isBlack(piece))) {
+          selected = [row, col];
+          e.target.classList.add('selected');
+        }
+      }
+    }
+
+    function isValidMove(piece, fromRow, fromCol, toRow, toCol) {
+      if (!piece) return false;
+
+      const target = board[toRow][toCol];
+      if (currentPlayer === 'white' && isWhite(target)) return false;
+      if (currentPlayer === 'black' && isBlack(target)) return false;
+
+      // Basic pawn movement (no captures or promotions yet)
+      if (piece === '♙') {
+        if (fromCol === toCol && board[toRow][toCol] === '') {
+          if (fromRow === 6 && toRow === 4) return true; // two-step
+          if (toRow === fromRow - 1) return true;         // one-step
+        }
+      }
+
+      if (piece === '♟') {
+        if (fromCol === toCol && board[toRow][toCol] === '') {
+          if (fromRow === 1 && toRow === 3) return true;
+          if (toRow === fromRow + 1) return true;
+        }
+      }
+
+      return true; // allow all moves for now (can improve later)
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
+
+
+
+
